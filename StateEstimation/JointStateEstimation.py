@@ -70,7 +70,7 @@ def callback(data):
 	num+=1
 
 	global KF
-	KF.predict(np.zeros(34))
+	KF.predict(np.zeros(34))#Needs revision
 	[pos,P_temp]=KF.getPrediction()
 
 	data_pred=copy.deepcopy(data)
