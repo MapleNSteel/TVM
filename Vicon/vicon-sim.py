@@ -6,7 +6,7 @@ import cPickle as pickle
 
 import rospy
 
-viconData=pickle.load(open("vicon.dat","rb"))
+viconData=pickle.load(open("vicon1.dat","rb"))
 
 def signal_handler(signal, frame):
 	print("bye!")

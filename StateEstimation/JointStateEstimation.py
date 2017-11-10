@@ -2,9 +2,8 @@ import numpy as np
 from numpy.random import random
 import matplotlib.pyplot as plt
 import sys, signal
-sys.path.append('/home/trina/TVM/StateEstimation/KalmanFilter')
 import copy
-from KF import KalmanFilter
+from KalmanFilter import KF
 
 import cPickle as pickle
 
@@ -60,7 +59,7 @@ R=np.diag(o_sigma**2)
 
 jointStatesEstimation=[]
 
-KF=KalmanFilter(F,B,Q,H,R,P,mean)
+KF=KF.KalmanFilter(F,B,Q,H,R,P,mean)
 
 def callback(data):
 	#print("I heard "+str(np.array(np.concatenate((data.position,data.velocity)))))
@@ -70,7 +69,7 @@ def callback(data):
 	num+=1
 
 	global KF
-	KF.predict(np.zeros(34))#Needs revision
+	KF.predict(np.zeros(34))
 	[pos,P_temp]=KF.getPrediction()
 
 	data_pred=copy.deepcopy(data)
