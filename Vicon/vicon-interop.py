@@ -82,8 +82,20 @@ def getJointAngles(torso,shoulder_right,shoulder_left,arm_right,elbow_right,wris
 
 	left_elbowPitch_angle =np.pi-np.arccos((L1*L1+L2*L2-P*P)/(2*L1*L2))
 	#angle_list.append(elbowPitch_angle)
+	A1=np.array([[np.cos(left_shoulderPitch_angle), -np.sin(left_shoulderPitch_angle), 0 , 0],[np.sin(left_shoulderPitch_angle), np.cos(left_shoulderPitch_angle), 0, 0],[0, 0, 1, 0],[0, 0, 0, 1]])
+	A2=np.array([[1, 0, 0, 0],[0, np.cos(left_shoulderYaw_angle), -np.sin(left_shoulderYaw_angle), 0],[0, np.sin(left_shoulderYaw_angle), np.cos(left_shoulderYaw_angle), 0],[0, 0, 0, 1]])
+	A3=np.array([[np.cos(left_shoulderRoll_angle), -np.sin(left_shoulderRoll_angle), 0, 0],[np.sin(left_shoulderRoll_angle), np.cos(left_shoulderRoll_angle), 0, 0],[0, 0, 1, L1],[0, 0, 0, 1]])
 
-	left_elbow_roll=0
+	rot=np.zeros((3,3))
+	rot[:,0]=np.array([(wrist_left_1.x-wrist_left_2.x), (wrist_left_1.y-wrist_left_2.y), (wrist_left_1.z-wrist_left_2.z)])
+	rot[:,0]/=np.linalg.norm(rot[:,0])
+	rot[:,1]=np.array([lowerarm_left.x-0.5*(wrist_left_1.x+wrist_left_2.x), lowerarm_left.y-0.5*(wrist_left_1.y+wrist_left_2.y), lowerarm_left.z-0.5*(wrist_left_1.z+wrist_left_2.z)])
+	rot[:,1]/=np.linalg.norm(rot[:,1])
+	rot[:,2]=np.cross(rot[:,0], rot[:,1])
+
+	r=A1[0:3,0:3].dot(A2[0:3,0:3]).dot(A3[0:3,0:3]).dot(rot)
+
+	left_elbow_roll=np.arcsin(-r[1,2])
     
 	v1=np.array([index_left.x-0.5*(wrist_left_1.x+wrist_left_2.x),index_left.y--0.5*(wrist_left_1.y+wrist_left_2.y),index_left.z--0.5*(wrist_left_1.z+wrist_left_2.z)])
 	v2=np.array([0.5*(wrist_left_1.x+wrist_left_2.x)-elbow_left.x,0.5*(wrist_left_1.y+wrist_left_2.y)-elbow_left.y,0.5*(wrist_left_1.z+wrist_left_2.z)-elbow_left.z])
@@ -122,7 +134,20 @@ def getJointAngles(torso,shoulder_right,shoulder_left,arm_right,elbow_right,wris
 	right_elbowPitch_angle =np.pi-np.arccos((L1*L1+L2*L2-P*P)/(2*L1*L2))
 	#angle_list.append(elbowPitch_angle)
 
-	right_elbow_roll=0
+	A1=np.array([[np.cos(right_shoulderPitch_angle), -np.sin(right_shoulderPitch_angle), 0 , 0],[np.sin(right_shoulderPitch_angle), np.cos(right_shoulderPitch_angle), 0, 0],[0, 0, 1, 0],[0, 0, 0, 1]])
+	A2=np.array([[1, 0, 0, 0],[0, np.cos(right_shoulderYaw_angle), -np.sin(right_shoulderYaw_angle), 0],[0, np.sin(right_shoulderYaw_angle), np.cos(right_shoulderYaw_angle), 0],[0, 0, 0, 1]])
+	A3=np.array([[np.cos(right_shoulderRoll_angle), -np.sin(right_shoulderRoll_angle), 0, 0],[np.sin(right_shoulderRoll_angle), np.cos(right_shoulderRoll_angle), 0, 0],[0, 0, 1, L1],[0, 0, 0, 1]])
+
+	rot=np.zeros((3,3))
+	rot[:,0]=np.array([(wrist_right_1.x-wrist_right_2.x), (wrist_right_1.y-wrist_right_2.y), (wrist_right_1.z-wrist_right_2.z)])
+	rot[:,0]/=np.linalg.norm(rot[:,0])
+	rot[:,1]=np.array([lowerarm_right.x-0.5*(wrist_right_1.x+wrist_right_2.x), lowerarm_right.y-0.5*(wrist_right_1.y+wrist_right_2.y), lowerarm_right.z-0.5*(wrist_right_1.z+wrist_right_2.z)])
+	rot[:,1]/=np.linalg.norm(rot[:,1])
+	rot[:,2]=np.cross(rot[:,0], rot[:,1])
+
+	r=A1[0:3,0:3].dot(A2[0:3,0:3]).dot(A3[0:3,0:3]).dot(rot)
+
+	right_elbow_roll=np.arcsin(-r[1,2])
 	
 	v1=np.array([index_right.x-0.5*(wrist_right_1.x+wrist_right_2.x),index_right.y--0.5*(wrist_right_1.y+wrist_right_2.y),index_right.z--0.5*(wrist_right_1.z+wrist_right_2.z)])
 	v2=np.array([0.5*(wrist_right_1.x+wrist_right_2.x)-elbow_right.x,0.5*(wrist_right_1.y+wrist_right_2.y)-elbow_right.y,0.5*(wrist_right_1.z+wrist_right_2.z)-elbow_right.z])
