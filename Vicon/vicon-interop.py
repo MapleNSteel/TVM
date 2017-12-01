@@ -97,7 +97,7 @@ def getJointAngles(torso,shoulder_right,shoulder_left,arm_right,elbow_right,wris
 
 	left_elbow_roll=np.arcsin(-r[1,2])
     
-	v1=np.array([index_left.x-0.5*(wrist_left_1.x+wrist_left_2.x),index_left.y--0.5*(wrist_left_1.y+wrist_left_2.y),index_left.z--0.5*(wrist_left_1.z+wrist_left_2.z)])
+	v1=np.array([index_left.x-0.5*(wrist_left_1.x+wrist_left_2.x),index_left.y-0.5*(wrist_left_1.y+wrist_left_2.y),index_left.z-0.5*(wrist_left_1.z+wrist_left_2.z)])
 	v2=np.array([0.5*(wrist_left_1.x+wrist_left_2.x)-elbow_left.x,0.5*(wrist_left_1.y+wrist_left_2.y)-elbow_left.y,0.5*(wrist_left_1.z+wrist_left_2.z)-elbow_left.z])
 	
 	left_wrist_pitch=np.dot(v1,v2)/(np.linalg.norm(v1)*np.linalg.norm(v2))
@@ -149,7 +149,7 @@ def getJointAngles(torso,shoulder_right,shoulder_left,arm_right,elbow_right,wris
 
 	right_elbow_roll=np.arcsin(-r[1,2])
 	
-	v1=np.array([index_right.x-0.5*(wrist_right_1.x+wrist_right_2.x),index_right.y--0.5*(wrist_right_1.y+wrist_right_2.y),index_right.z--0.5*(wrist_right_1.z+wrist_right_2.z)])
+	v1=np.array([index_right.x-0.5*(wrist_right_1.x+wrist_right_2.x),index_right.y-0.5*(wrist_right_1.y+wrist_right_2.y),index_right.z-0.5*(wrist_right_1.z+wrist_right_2.z)])
 	v2=np.array([0.5*(wrist_right_1.x+wrist_right_2.x)-elbow_right.x,0.5*(wrist_right_1.y+wrist_right_2.y)-elbow_right.y,0.5*(wrist_right_1.z+wrist_right_2.z)-elbow_right.z])
 	
 	right_wrist_pitch=np.dot(v1,v2)/(np.linalg.norm(v1)*np.linalg.norm(v2))
@@ -193,7 +193,7 @@ def callback(data):
 
 	[left_shoulderPitch_angle,left_shoulderYaw_angle,left_shoulderRoll_angle,left_elbowPitch_angle,left_elbow_roll,left_wrist_pitch,right_shoulderPitch_angle,right_shoulderYaw_angle,right_shoulderRoll_angle,right_elbowPitch_angle,right_elbow_roll,right_wrist_pitch]=getJointAngles(torso,shoulder_right,shoulder_left,arm_right,elbow_right,wrist_right_1,wrist_right_2,lowerarm_right,thumb_right,index_right,arm_left,elbow_left,wrist_left_1,wrist_left_2,lowerarm_left,thumb_left,index_left)
 
-	left_b_shoulderPitch = (left_shoulderPitch_angle-np.pi/4)
+	left_b_shoulderPitch = (left_shoulderPitch_angle-np.pi/3)
 	left_b_shoulderYaw = left_shoulderYaw_angle-5*np.pi/6
 	left_b_shoulderRoll = (left_shoulderRoll_angle)-np.pi-np.pi/4
 	left_b_elbowPitch = (left_elbowPitch_angle)
@@ -204,7 +204,7 @@ def callback(data):
 	left_setElbowPitch = left_b_elbowPitch
 	left_setElbowRoll = left_elbow_roll
 
-	right_b_shoulderPitch = (right_shoulderPitch_angle+np.pi/4)
+	right_b_shoulderPitch = (right_shoulderPitch_angle+np.pi/3)
 	right_b_shoulderYaw = right_shoulderYaw_angle-5*np.pi/6
 	right_b_shoulderRoll = (right_shoulderRoll_angle)+np.pi/4	
 	right_b_elbowPitch = (right_elbowPitch_angle)
