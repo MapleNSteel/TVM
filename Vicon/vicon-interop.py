@@ -33,9 +33,13 @@ bufferAngles=[]
 
 bufferLength=64
 angleBuffer=np.zeros((active_joints*2,bufferLength))
+maxa = -1000
+mina = 1000
 
 def signal_handler(signal, frame):
 	print("bye!")
+	print("max angle is ", maxa)
+	print("min angle is ", mina)
 	#pickle.dump(viconData,open("viconData.dat","wb"))
 	pickle.dump(jointAngles,open("angle.dat","wb"))
 	#scipy.io.savemat('angle.mat', mdict={'jointAngles': jointAngles})
@@ -193,18 +197,48 @@ def callback(data):
 
 	[left_shoulderPitch_angle,left_shoulderYaw_angle,left_shoulderRoll_angle,left_elbowPitch_angle,left_elbow_roll,left_wrist_pitch,right_shoulderPitch_angle,right_shoulderYaw_angle,right_shoulderRoll_angle,right_elbowPitch_angle,right_elbow_roll,right_wrist_pitch]=getJointAngles(torso,shoulder_right,shoulder_left,arm_right,elbow_right,wrist_right_1,wrist_right_2,lowerarm_right,thumb_right,index_right,arm_left,elbow_left,wrist_left_1,wrist_left_2,lowerarm_left,thumb_left,index_left)
 
-	left_b_shoulderPitch = (left_shoulderPitch_angle-np.pi/3)
-	left_b_shoulderYaw = left_shoulderYaw_angle-5*np.pi/6
-	left_b_shoulderRoll = (left_shoulderRoll_angle)-np.pi-np.pi/4
-	left_b_elbowPitch = (left_elbowPitch_angle)
-
+	#left_b_shoulderPitch = (left_shoulderPitch_angle+np.pi/2)
+	hs0_min = -0.08919059 # human s0 joint limit min 
+	hs0_max = 1.754911514 # human s0 joint limit max
+	rs0_min = -1.0 # robot s0 joint limit min
+	rs0_max = 1.0 # robot s0 joint limit max
+	left_b_shoulderPitch = getangle(hs0_min, hs0_max, rs0_min, rs0_max, left_shoulderPitch_angle)
+	#left_b_shoulderYaw = left_shoulderYaw_angle-5*np.pi/6
+	hs1_min = -0.0559188
+	hs1_max = 2.88017836
+	rs1_min = -2.147
+	rs1_max = 1.047
+	left_b_shoulderYaw = getangle(hs1_min, hs1_max, rs1_min, rs1_max, left_shoulderYaw_angle)
+	#left_b_shoulderRoll = (left_shoulderRoll_angle)-np.pi-np.pi/4
+	he0_min = -0.06421624
+	he0_max = 3.55323329
+	re0_min = -3.0541
+	re0_max = 0
+	left_b_shoulderRoll = getangle(he0_min, he0_max, re0_min, re0_max, left_shoulderRoll_angle)
+	#left_b_elbowPitch = (left_elbowPitch_angle)
+	he1_min = -0.07400418
+	he1_max = 2.4775118
+	re1_min = -0.05
+	re1_max = 2.618
+	left_b_elbowPitch = getangle(he1_min, he1_max, re1_min, re1_max, left_elbowPitch_angle)
+	hw0_min = -1.448542
+	hw0_max = 0.09527575
+	rw0_min = -3.059
+	rw0_max = 0
+	left_b_elbowRoll = getangle(hw0_min, hw0_max, rw0_min, rw0_max, left_elbow_roll)
+	hw1_min = -0.3133831
+	hw1_max = 1.1209720
+	rw1_min = -1.5707
+	rw1_max = 2.094
+	left_b_wristPitch = getangle(hw1_min, hw1_max, rw1_min, rw1_max, left_wrist_pitch)
+	# set joint angles
 	left_setShoulderPitch = left_b_shoulderPitch
 	left_setShoulderYaw = left_b_shoulderYaw
 	left_setShoulderRoll = left_b_shoulderRoll
 	left_setElbowPitch = left_b_elbowPitch
-	left_setElbowRoll = left_elbow_roll
-
-	right_b_shoulderPitch = (right_shoulderPitch_angle+np.pi/3)
+	left_setElbowRoll = left_b_elbowRoll
+	left_setWristPitch = left_b_wristPitch
+	right_b_shoulderPitch = (right_shoulderPitch_angle-np.pi/2)
 	right_b_shoulderYaw = right_shoulderYaw_angle-5*np.pi/6
 	right_b_shoulderRoll = (right_shoulderRoll_angle)+np.pi/4	
 	right_b_elbowPitch = (right_elbowPitch_angle)
@@ -215,19 +249,44 @@ def callback(data):
 	right_setElbowPitch = right_b_elbowPitch
 	right_setElbowRoll = right_elbow_roll
 	global m
+	global maxa
+	global mina
 	left_joint_names=m.left_limb.joint_names()
-	m.setLeftArmJointAngles([left_joint_names[0],left_joint_names[1],left_joint_names[2],left_joint_names[3],left_joint_names[4],left_joint_names[5]],[left_setShoulderPitch, left_setShoulderYaw, left_setShoulderRoll, left_setElbowPitch, left_setElbowRoll, left_wrist_pitch]);
-	print(180*np.array([left_setShoulderPitch, left_setShoulderYaw, left_setShoulderRoll, left_setElbowPitch, left_setElbowRoll, left_wrist_pitch])/np.pi)
-
 	right_joint_names=m.right_limb.joint_names()
+	print("Left joint angles are :", np.array([left_setShoulderPitch, left_setShoulderYaw, left_setShoulderRoll, left_setElbowPitch, left_setElbowRoll, left_wrist_pitch]))
+	print("Right joint angles are :", np.array([right_setShoulderPitch, right_setShoulderYaw, right_setShoulderRoll, right_setElbowPitch, right_setElbowRoll, right_wrist_pitch]))
+	a = left_wrist_pitch
+	if a > maxa:
+	    maxa = a
+	if a < mina:
+	    mina = a
+	m.setLeftArmJointAngles([left_joint_names[0],left_joint_names[1],left_joint_names[2],left_joint_names[3],left_joint_names[4],left_joint_names[5]],[left_setShoulderPitch, left_setShoulderYaw, left_setShoulderRoll, left_setElbowPitch, left_setElbowRoll, left_setWristPitch])
 	m.setRightArmJointAngles([right_joint_names[0],right_joint_names[1],right_joint_names[2],right_joint_names[3],right_joint_names[4],right_joint_names[5]],[right_setShoulderPitch, right_setShoulderYaw, right_setShoulderRoll, right_setElbowPitch, right_setElbowRoll, right_wrist_pitch])
-	print(180*np.array([right_setShoulderPitch, right_setShoulderYaw, right_setShoulderRoll, right_setElbowPitch, right_setElbowRoll, right_wrist_pitch])/np.pi)
+
+def getangle(minhuman, maxhuman, minbaxter, maxbaxter, curr):
+	if curr > maxhuman:
+		curr = maxhuman
+	if curr < minhuman:
+		curr = minhuman
+	k = (maxbaxter - minbaxter)/(maxhuman - minhuman)
+	result = k * (curr - minhuman) + minbaxter
+	if result > max(maxbaxter, minbaxter):
+		result = max(maxbaxter, minbaxter)
+	if result < min(minbaxter, maxbaxter):
+		result = min(minbaxter, maxbaxter)
+	return result
 
 def main():
 	rospy.init_node('listener', anonymous=True)
+	#print("here")
 	global m
+	global maxa
+	global mina
+	maxa = -1000
+	mina = 1000
+
 	m=MoveArms()
-	print("Getting robot state... ")
+	#print("Getting robot state... ")
 	'''rs = baxter_interface.RobotEnable(CHECK_VERSION)
 	init_state = rs.state().enabled
 	rate = rospy.Rate(100) # 10hz
@@ -239,6 +298,7 @@ def main():
 	rospy.on_shutdown(clean_shutdown)
 	print("Enabling robot... ")
 	rs.enable()'''
+	#print("here")
 	rospy.Subscriber("/vicon/markers", Markers, callback)
 
 	while(True):
