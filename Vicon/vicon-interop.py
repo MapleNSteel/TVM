@@ -17,6 +17,7 @@ import math
 
 import numpy, scipy.io
 
+import csv
 firFilter=np.array([-0.0001,0.0000,0.0002,0.0006,0.0013,0.0022,0.0036,0.0051,0.0068,0.0085,0.0097,
 0.0103,0.0099,0.0082,0.0051,0.0008,-0.0044,-0.0100,-0.0152,-0.0191,-0.0206,-0.0191,-0.0138,-0.0045,
 0.0087,0.0250,0.0433,0.0623,0.0803,0.0955,0.1066,0.1125,0.1125,0.1066,0.0955,0.0803,0.0623,0.0433,
@@ -198,56 +199,88 @@ def callback(data):
 	[left_shoulderPitch_angle,left_shoulderYaw_angle,left_shoulderRoll_angle,left_elbowPitch_angle,left_elbow_roll,left_wrist_pitch,right_shoulderPitch_angle,right_shoulderYaw_angle,right_shoulderRoll_angle,right_elbowPitch_angle,right_elbow_roll,right_wrist_pitch]=getJointAngles(torso,shoulder_right,shoulder_left,arm_right,elbow_right,wrist_right_1,wrist_right_2,lowerarm_right,thumb_right,index_right,arm_left,elbow_left,wrist_left_1,wrist_left_2,lowerarm_left,thumb_left,index_left)
 
 	#left_b_shoulderPitch = (left_shoulderPitch_angle+np.pi/2)
-	hs0_min = -0.08919059 # human s0 joint limit min 
-	hs0_max = 1.754911514 # human s0 joint limit max
-	rs0_min = -1.0 # robot s0 joint limit min
-	rs0_max = 1.0 # robot s0 joint limit max
-	left_b_shoulderPitch = getangle(hs0_min, hs0_max, rs0_min, rs0_max, left_shoulderPitch_angle)
+	hs0_min_l = -0.08919059 # human s0 joint limit min 
+	hs0_max_l = 1.754911514 # human s0 joint limit max
+	rs0_min_l = -1.0 # robot s0 joint limit min
+	rs0_max_l = 1.0 # robot s0 joint limit max
+	left_b_shoulderPitch = getangle(hs0_min_l, hs0_max_l, rs0_min_l, rs0_max_l, left_shoulderPitch_angle)
 	#left_b_shoulderYaw = left_shoulderYaw_angle-5*np.pi/6
-	hs1_min = -0.0559188
-	hs1_max = 2.88017836
-	rs1_min = -2.147
-	rs1_max = 1.047
-	left_b_shoulderYaw = getangle(hs1_min, hs1_max, rs1_min, rs1_max, left_shoulderYaw_angle)
+	hs1_min_l = -0.0559188
+	hs1_max_l = 2.88017836
+	rs1_min_l = -2.147
+	rs1_max_l = 1.047
+	left_b_shoulderYaw = getangle(hs1_min_l, hs1_max_l, rs1_min_l, rs1_max_l, left_shoulderYaw_angle)
 	#left_b_shoulderRoll = (left_shoulderRoll_angle)-np.pi-np.pi/4
-	he0_min = -0.06421624
-	he0_max = 3.55323329
-	re0_min = -3.0541
-	re0_max = 0
-	left_b_shoulderRoll = getangle(he0_min, he0_max, re0_min, re0_max, left_shoulderRoll_angle)
+	he0_min_l = 1.972906
+	he0_max_l = 5.236049
+	re0_min_l = -3.0541
+	re0_max_l = 0
+	left_b_shoulderRoll = getangle(he0_min_l, he0_max_l, re0_min_l, re0_max_l, left_shoulderRoll_angle)
 	#left_b_elbowPitch = (left_elbowPitch_angle)
-	he1_min = -0.07400418
-	he1_max = 2.4775118
-	re1_min = -0.05
-	re1_max = 2.618
-	left_b_elbowPitch = getangle(he1_min, he1_max, re1_min, re1_max, left_elbowPitch_angle)
-	hw0_min = -1.448542
-	hw0_max = 0.09527575
-	rw0_min = -3.059
-	rw0_max = 0
-	left_b_elbowRoll = getangle(hw0_min, hw0_max, rw0_min, rw0_max, left_elbow_roll)
-	hw1_min = -0.3133831
-	hw1_max = 1.1209720
-	rw1_min = -1.5707
-	rw1_max = 2.094
-	left_b_wristPitch = getangle(hw1_min, hw1_max, rw1_min, rw1_max, left_wrist_pitch)
-	# set joint angles
+	he1_min_l = -0.07400418
+	he1_max_l = 2.4775118
+	re1_min_l = -0.05
+	re1_max_l = 2.618
+	left_b_elbowPitch = getangle(he1_min_l, he1_max_l, re1_min_l, re1_max_l, left_elbowPitch_angle)
+	hw0_min_l = -1.4250930 #-0.1782157
+	hw0_max_l = 1.463168 #0.00562026
+	rw0_min_l = 3.059/2
+	rw0_max_l = -3.059/2
+	left_b_elbowRoll = getangle(hw0_min_l, hw0_max_l, rw0_min_l, rw0_max_l, left_elbow_roll)
+	hw1_min_l = -0
+	hw1_max_l = 1.1209720
+	rw1_min_l = -0.2
+	rw1_max_l = 0.2
+	left_b_wristPitch = getangle(hw1_min_l, hw1_max_l, rw1_min_l, rw1_max_l, left_wrist_pitch)
+	# set left joint angles
 	left_setShoulderPitch = left_b_shoulderPitch
 	left_setShoulderYaw = left_b_shoulderYaw
 	left_setShoulderRoll = left_b_shoulderRoll
 	left_setElbowPitch = left_b_elbowPitch
 	left_setElbowRoll = left_b_elbowRoll
 	left_setWristPitch = left_b_wristPitch
-	right_b_shoulderPitch = (right_shoulderPitch_angle-np.pi/2)
-	right_b_shoulderYaw = right_shoulderYaw_angle-5*np.pi/6
-	right_b_shoulderRoll = (right_shoulderRoll_angle)+np.pi/4	
-	right_b_elbowPitch = (right_elbowPitch_angle)
 
+	#right_b_shoulderPitch = (right_shoulderPitch_angle-np.pi/2)
+	hs0_min_r = -1.8280406
+	hs0_max_r = 0.03144568
+	rs0_min_r = -1
+	rs0_max_r = 1
+	right_b_shoulderPitch = getangle(hs0_min_r, hs0_max_r, rs0_min_r, rs0_max_r, right_shoulderPitch_angle)
+	#right_b_shoulderYaw = right_shoulderYaw_angle-5*np.pi/6
+	hs1_min_r = -0.055272
+	hs1_max_r = 2.95152248
+	rs1_min_r = -2.147 
+	rs1_max_r = 1.047
+	right_b_shoulderYaw = getangle(hs1_min_r, hs1_max_r, rs1_min_r, rs1_max_r, right_shoulderYaw_angle)
+	#right_b_shoulderRoll = (right_shoulderRoll_angle)+np.pi/4	
+	he0_min_r = -1.590168309
+	he0_max_r = 1.59016830
+	re0_min_r =  0
+	re0_max_r = 3.0541
+	right_b_shoulderRoll = getangle(he0_min_r, he0_max_r, re0_min_r, re0_max_r, right_shoulderRoll_angle)
+	he1_min_r = -0.03706783
+	he1_max_r = 2.41286640
+	re1_min_r = -0.05
+	re1_max_r = 2.618
+	#right_b_elbowPitch = (right_elbowPitch_angle)
+	right_b_elbowPitch = getangle(he1_min_r, he1_max_r, re1_min_r, re1_max_r, right_elbowPitch_angle)
+	hw0_min_r = -1.5143683
+	hw0_max_r = 1.5143683
+	rw0_min_r = -3.059/2
+	rw0_max_r = 3.059/2
+	right_b_elbowRoll = getangle(hw0_min_r, hw0_max_r, rw0_min_r, rw0_max_r, right_elbow_roll)
+	hw1_min_r = -0.0315482
+	hw1_max_r = 0.996461
+	rw1_min_r = -0.2
+	rw1_max_r = 0.2
+	right_b_wristPitch = getangle(hw1_min_r, hw1_max_r, rw1_min_r, rw1_max_r, right_wrist_pitch)	
+	# set right joint angles
 	right_setShoulderPitch = right_b_shoulderPitch
 	right_setShoulderYaw = right_b_shoulderYaw
 	right_setShoulderRoll = right_b_shoulderRoll
 	right_setElbowPitch = right_b_elbowPitch
-	right_setElbowRoll = right_elbow_roll
+	right_setElbowRoll = right_b_elbowRoll
+	right_setWristPitch = right_b_wristPitch
 	global m
 	global maxa
 	global mina
@@ -261,7 +294,7 @@ def callback(data):
 	if a < mina:
 	    mina = a
 	m.setLeftArmJointAngles([left_joint_names[0],left_joint_names[1],left_joint_names[2],left_joint_names[3],left_joint_names[4],left_joint_names[5]],[left_setShoulderPitch, left_setShoulderYaw, left_setShoulderRoll, left_setElbowPitch, left_setElbowRoll, left_setWristPitch])
-	m.setRightArmJointAngles([right_joint_names[0],right_joint_names[1],right_joint_names[2],right_joint_names[3],right_joint_names[4],right_joint_names[5]],[right_setShoulderPitch, right_setShoulderYaw, right_setShoulderRoll, right_setElbowPitch, right_setElbowRoll, right_wrist_pitch])
+	m.setRightArmJointAngles([right_joint_names[0],right_joint_names[1],right_joint_names[2],right_joint_names[3],right_joint_names[4],right_joint_names[5]],[right_setShoulderPitch, right_setShoulderYaw, right_setShoulderRoll, right_setElbowPitch, right_setElbowRoll, right_setWristPitch])
 
 def getangle(minhuman, maxhuman, minbaxter, maxbaxter, curr):
 	if curr > maxhuman:
