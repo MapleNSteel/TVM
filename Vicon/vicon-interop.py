@@ -36,6 +36,13 @@ bufferLength=64
 angleBuffer=np.zeros((active_joints*2,bufferLength))
 maxa = -1000
 mina = 1000
+loop = 1
+axisx_right = [0,0,0]
+axisy_right = [0,0,0]
+axisz_right = [0,0,0]
+axisx_left = [0,0,0]
+axisy_left = [0,0,0]
+axisz_left = [0,0,0]
 
 def signal_handler(signal, frame):
 	print("bye!")
@@ -48,7 +55,96 @@ def signal_handler(signal, frame):
 	sys.exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
+def getJointAngleFromMarker(shoulder, elbow, wrist1, wrist2, index, axisx, axisy, axisz):
+	# this function calculates joint angle from marker positions, wrist1 and wrist2 are in and out marker of wirst.
+	ex = elbow.x - shoulder.x # relative elbow position
+	ey = elbow.y - shoulder.y
+	ez = elbow.z - shoulder.z
+	shoulder_pitch = np.arctan2(ex, -ey)
+	c1 = np.cos(shoulder_pitch)
+	s1 = np.sin(shoulder_pitch)
+	l1 = np.linalg.norm([ex, ey, ez])
+	if(c1 != 0):
+		S2 = -ey/c1/l1
+	else:
+		S2 = ex/s1/l1
+	shoulder_yaw = np.arctan2(S2, ez/l1)
+	s2 = np.sin(shoulder_yaw)
+	c2 = np.cos(shoulder_yaw)
+	wx = (wrist1.x + wrist2.x)/2 - shoulder.x
+	wy = (wrist1.y + wrist2.y)/2 - shoulder.y
+	wz = (wrist1.z + wrist2.z)/2 - shoulder.z
+	l2 = np.linalg.norm([wx - ex, wy - ey, wz - ez])
+	p = np.linalg.norm([wx, wy, wz])
+	shoulder_roll = np.arctan2(-s1*c2*wx + c1*c2*wy + s2*wz, c1*wx, s1*wy)
+	elbow_pitch = np.pi - np.arccos((l1^2 + l2^2 - p^2)/(2*l1*l2))
+	ix = index.x - shoulder.x
+	iy = index.y - shoulder.y
+	iz = index.z - shoulder.z
+	lwe = np.linalg.norm([wx - ex, wy - ey, wz - ez])
+	lwi = np.linalg.norm([wx - ix, wy - iy, wz - iz])
+	lie = np.linalg.norm([ix - ex, iy - ey, iz - ez])
+	wrist_pitch = np.arccos((lwe^2 + lwi^2 - lie^2)/(2*lwe*lwi))
+	# get the vector from wrist 2(out) to wrist
+	ww2 = [wrist2.x - (wrist1.x + wrist2.x)/2, wrist1.y - (wrist1.y + wrist2.y)/2, wrist1.z - (wrist1.z + wrist2.z)/2]
+	ww2 = ww2/np.linalg.norm(ww2)
+	elbow_roll = np.arctan2(np.dot(ww2, asixy), np.dot(ww2, asixx))
+	angles = [shoulder_pitch, shoulder_yaw, shoulder_roll, elbow_pitch, elbow_roll, wrist_pitch]
 
+def getInitialValueElbowRoll(shoulder, elbow, wrist1, wrist2):
+	global axisx_right
+	global axisy_right
+	global axisz_right
+	global axisx_left 
+	global axisy_left 
+	global axisz_left
+	wx = (wrist1.x + wrist2.x)/2 - shoulder.x
+	wy = (wrist1.y + wrist2.y)/2 - shoulder.y
+	wz = (wrist1.z + wrist2.z)/2 - shoulder.z
+	ex = elbow.x - shoulder.x # relative elbow position
+	ey = elbow.y - shoulder.y
+	ez = elbow.z - shoulder.z
+	if (loop == 1):
+		axisx = [wrist1.x - wx, wrist1.y - wy, wirst1.z - wz]
+		axisx = axisx/np.linalg.norm(axisx)
+		axisz = [ex - wx, ey - wy, ez - wz]
+		axisz = axisz/np.linalg.norm(axisz)
+		axisy = np.cross(axisx, axisz)
+	axiss = [axisx, axisy, axisz]
+	return axiss
+
+def getFullAngles(shoulder_right,elbow_right,wrist_right_1,wrist_right_2,index_right,shoulder_left,elbow_left,wrist_left_1,wrist_left_2,index_left):
+	global axisx_right
+	global axisy_right
+	global axisz_right
+	global axisx_left 
+	global axisy_left 
+	global axisz_left 
+	global loop
+	if (loop == 1):
+		axiss_right = getInitialValueElbowRoll(shoulder_right,elbow_right,wrist_right_1,wrist_right_2)
+		axiss_left = getInitialValueElbowRoll(shoulder_left,elbow_left,wrist_left_1,wrist_left_2)
+		axisx_right = axiss_right[0]
+		axisy_right = axiss_right[1]
+		axisz_right = axiss_right[2]
+		axisx_left = axiss_left[0]
+		axisy_left = axiss_left[1]
+		axisz_left = axiss_left[2]	
+	loop = loop + 1
+	right_angle = getJointAngleFromMarker(shoulder_right,elbow_right,wrist_right_1,wrist_right_2,index_right, axisx_right, axisy_right, axisz_right)
+	left_angle = getJointAngleFromMarker(shoulder_left,elbow_left,wrist_left_1,wrist_left_2,index_left, axisx_left, axisy_left, axisz_left)
+	angles = left_angle + right_angle
+	angleBuffer[0:,0:bufferLength-1]=angleBuffer[0:,1:bufferLength]
+	angleBuffer[0:,bufferLength-1] = agnles
+	
+	angles=np.dot(firFilter[::-1],np.transpose(angleBuffer))    
+    
+	jointAngles.append([left_shoulderPitch_angle,left_shoulderYaw_angle,left_shoulderRoll_angle,left_elbowPitch_angle,
+	right_shoulderPitch_angle,right_shoulderYaw_angle,right_shoulderRoll_angle,right_elbowPitch_angle])
+	
+	bufferAngles.append(angles)
+	return angles
+"""
 def getJointAngles(torso,shoulder_right,shoulder_left,arm_right,elbow_right,wrist_right_1,wrist_right_2,lowerarm_right,thumb_right,index_right,arm_left,elbow_left,wrist_left_1,wrist_left_2,lowerarm_left,thumb_left,index_left):
 	global prev_angles
 	global window_size
@@ -170,10 +266,11 @@ def getJointAngles(torso,shoulder_right,shoulder_left,arm_right,elbow_right,wris
 	bufferAngles.append(angles)
 
 	return angles
-
+"""
 def callback(data):
 
 	viconData.append(data)
+
 
 	torso = data.markers[0].translation
 	shoulder_right = data.markers[1].translation
@@ -196,7 +293,7 @@ def callback(data):
 	global prev_angles
 	global window_size
 
-	[left_shoulderPitch_angle,left_shoulderYaw_angle,left_shoulderRoll_angle,left_elbowPitch_angle,left_elbow_roll,left_wrist_pitch,right_shoulderPitch_angle,right_shoulderYaw_angle,right_shoulderRoll_angle,right_elbowPitch_angle,right_elbow_roll,right_wrist_pitch]=getJointAngles(torso,shoulder_right,shoulder_left,arm_right,elbow_right,wrist_right_1,wrist_right_2,lowerarm_right,thumb_right,index_right,arm_left,elbow_left,wrist_left_1,wrist_left_2,lowerarm_left,thumb_left,index_left)
+	[left_shoulderPitch_angle,left_shoulderYaw_angle,left_shoulderRoll_angle,left_elbowPitch_angle,left_elbow_roll,left_wrist_pitch,right_shoulderPitch_angle,right_shoulderYaw_angle,right_shoulderRoll_angle,right_elbowPitch_angle,right_elbow_roll,right_wrist_pitch]=getFullAngles(torso,shoulder_right,shoulder_left,arm_right,elbow_right,wrist_right_1,wrist_right_2,lowerarm_right,thumb_right,index_right,arm_left,elbow_left,wrist_left_1,wrist_left_2,lowerarm_left,thumb_left,index_left)
 
 	#left_b_shoulderPitch = (left_shoulderPitch_angle+np.pi/2)
 	hs0_min_l = -0.08919059 # human s0 joint limit min 
